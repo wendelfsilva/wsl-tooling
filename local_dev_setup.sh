@@ -2,13 +2,13 @@
 # shellcheck source=/dev/null
 # Author: Wendel Silva
 
-ZSH_ENABLED=yes
-ZSH_THEME=robbyrussell
-DOCKER_ENABLED=no
-PYENV_ENABLED=yes
-PYENV_PYTHON_VERSION=3:latest
-NVM_ENABLED=yes
-NVM_NODE_VERSION=latest
+ZSH_ENABLED=${ZSH_ENABLED:-'yes'}
+ZSH_THEME=${ZSH_THEME:-'robbyrussell'}
+DOCKER_ENABLED=${DOCKER_ENABLED:-'no'}
+PYENV_ENABLED=${PYENV_ENABLED:-'yes'}
+PYENV_PYTHON_VERSION=${PYENV_PYTHON_VERSION:-'3:latest'}
+NVM_ENABLED=${NVM_ENABLED:-'yes'}
+NVM_NODE_VERSION=${NVM_NODE_VERSION:-'latest'}
 
 # Function to check if the script is running as sudo
 check_sudo() {
@@ -213,7 +213,7 @@ install_zsh() {
             echo "zsh theme ${ZSH_THEME} is already installed... Done"
         else
             echo "Installing ${ZSH_THEME} as zsh theme"
-            sed -i 's/^ZSH_THEME=.\+$/ZSH_THEME="'${ZSH_THEME}'"/g' "${USER_PROFILE}"
+            sed -i "s/^ZSH_THEME=.\+$/ZSH_THEME=\"${ZSH_THEME}\"/g" "${USER_PROFILE}"
         fi
     fi
 }
