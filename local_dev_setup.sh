@@ -28,16 +28,8 @@ create_wsl_conf() {
     if [ ! -f "/etc/wsl.conf" ]; then
         echo "Creating /etc/wsl.conf"
         {
-            echo "[network]"
-            echo "hostname = winhost"
-            echo "generateResolvConf = true"
-            echo "generateHosts = true"
-            echo
             echo "[boot]"
             echo "systemd = true"
-            echo
-            echo "[experimental]"
-            echo "autoMemoryReclaim = dropcache"
         } | sudo tee /etc/wsl.conf >/dev/null
     fi
 }
