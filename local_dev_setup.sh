@@ -127,7 +127,7 @@ install_python_with_pyenv() {
     if [ ! -f "${HOME}/.pyenv/bin/pyenv" ]; then
         echo "pyenv not found, skipping installation"
     else
-        eval "$(pyenv init -)"
+        . "${USER_PROFILE_DIR}/pyenv"
 
         if [[ "$(pyenv versions)" == *"${PYENV_PYTHON_VERSION}"* ]]; then
             echo "python ${PYENV_PYTHON_VERSION} is already installed... Done"
@@ -169,7 +169,7 @@ install_npm_with_nvm() {
     if [ ! -f "${HOME}/.nvm/nvm.sh" ]; then
         echo "nvm not found, skipping installation"
     else
-        source "${HOME}/.nvm/nvm.sh"
+        . "${USER_PROFILE_DIR}/nvm"
 
         if [[ "${NVM_NODE_VERSION}" == "latest" ]]; then
             NVM_NODE_VERSION=$(nvm version-remote --lts | tr -d v)
