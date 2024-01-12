@@ -274,7 +274,7 @@ install_zsh() {
 update_user_profile() {
     USER_PROFILE_INCLUDE="for f in ${USER_PROFILE_DIR}/*; do source \$f; done"
     if [[ "$(cat "${USER_PROFILE}")" == *"${USER_PROFILE_INCLUDE}"* ]]; then
-        print_message "${USER_PROFILE_DIR} is already configured..." "${SUCCESS}"
+        print_message "${USER_PROFILE_DIR} is already configured... Done" "${SUCCESS}"
     else
         print_message "Setting ${USER_PROFILE_DIR} to ${USER_PROFILE}"
 
