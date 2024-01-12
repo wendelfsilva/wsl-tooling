@@ -204,7 +204,7 @@ install_nvm() {
             NVM_VERSION=$(git -C "${HOME}/.nvm" tag --list --sort=version:refname | tail -1)
 
             print_message "Setting nvm version to ${NVM_VERSION}"
-            git checkout --quiet "${NVM_VERSION}"
+            git -C "${HOME}/.nvm" checkout --quiet "${NVM_VERSION}"
 
             print_message "Creating nvm entry in ${USER_PROFILE_DIR}"
             {
@@ -274,7 +274,7 @@ install_zsh() {
 update_user_profile() {
     USER_PROFILE_INCLUDE="for f in ${USER_PROFILE_DIR}/*; do source \$f; done"
     if [[ "$(cat "${USER_PROFILE}")" == *"${USER_PROFILE_INCLUDE}"* ]]; then
-        print_message "${USER_PROFILE_DIR} is already configured... Done" "${SUCCESS}"
+        print_message "${USER_PROFILE_DIR} is already set... Done" "${SUCCESS}"
     else
         print_message "Setting ${USER_PROFILE_DIR} to ${USER_PROFILE}"
 
@@ -284,7 +284,7 @@ update_user_profile() {
             echo "$USER_PROFILE_INCLUDE"
         } >>"${USER_PROFILE}"
 
-        print_message "${USER_PROFILE_DIR} configured... Done" "${SUCCESS}"
+        print_message "${USER_PROFILE_DIR} set... Done" "${SUCCESS}"
     fi
 }
 
