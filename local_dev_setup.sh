@@ -127,7 +127,7 @@ install_python_with_pyenv() {
     if [ ! -f "${HOME}/.pyenv/bin/pyenv" ]; then
         echo "pyenv not found, skipping installation"
     else
-        source "${HOME}/.pyenv/bin/pyenv"
+        eval "$(pyenv init -)"
 
         if [[ "$(pyenv versions)" == *"${PYENV_PYTHON_VERSION}"* ]]; then
             echo "python ${PYENV_PYTHON_VERSION} is already installed... Done"
