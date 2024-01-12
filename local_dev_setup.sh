@@ -1,5 +1,6 @@
 #!/bin/bash
 # shellcheck source=/dev/null
+# shellcheck disable=SC2034
 # Author: Wendel Silva
 
 ZSH_ENABLED=${ZSH_ENABLED:-'yes'}
@@ -10,15 +11,22 @@ PYENV_PYTHON_VERSION=${PYENV_PYTHON_VERSION:-'3:latest'}
 NVM_ENABLED=${NVM_ENABLED:-'yes'}
 NVM_NODE_VERSION=${NVM_NODE_VERSION:-'latest'}
 
+# Function to print colorized messages
+print_message() {
+    local message=$1
+    local color=$2
+    echo -e "${color:-${NC}}${message}${NC}"
+}
+
 # Function to check if the script is running as sudo
 check_sudo() {
     if (($(id -u) == 0)); then
-        echo "Please run the script without sudo and wait for the sudo password to be requested"
+        print_message "Please run the script without sudo and wait for the sudo password to be requested" "${RED}"
         exit 0
     fi
 
     if ! sudo echo "Starting local dev setup for ${USER}..."; then
-        echo "Aborted"
+        print_message "Aborted" "${RED}"
         exit 0
     fi
 }
@@ -26,7 +34,7 @@ check_sudo() {
 # Function to create wsl.conf
 create_wsl_conf() {
     if [ ! -f "/etc/wsl.conf" ]; then
-        echo "Creating /etc/wsl.conf"
+        print_message "Creating /etc/wsl.conf" "${GREEN}"
         {
             echo "[boot]"
             echo "systemd = true"
@@ -43,13 +51,14 @@ create_user_profile_folder() {
 
     USER_PROFILE_DIR="${HOME}/.profile.d"
     if [ ! -d "${USER_PROFILE_DIR}" ]; then
-        echo "Creating ${USER_PROFILE_DIR}"
+        print_message "Creating ${USER_PROFILE_DIR}" "${GREEN}"
         mkdir -m 0755 "${USER_PROFILE_DIR}"
     fi
 }
 
 # Function to install system dependencies
 install_system_dependencies() {
+    print_message "Installing system dependencies..." "${GREEN}"
     sudo apt update -y
     sudo apt upgrade -y
     sudo apt install -y -f \
@@ -72,7 +81,7 @@ install_system_dependencies() {
 install_docker() {
     if [[ "${DOCKER_ENABLED}" == "yes" ]]; then
         if [ -f "/usr/bin/docker" ]; then
-            echo "docker is already installed... Done"
+            print_message "docker is already installed... Done" "${BLUE}"
         else
             # Add Docker's official GPG key:
             sudo apt-get update -y
@@ -103,7 +112,7 @@ install_docker() {
             sudo usermod -aG docker "${USER}"
 
             # Docker entry in user profile
-            echo "Creating docker entry in ${USER_PROFILE_DIR}"
+            print_message "Creating docker entry in ${USER_PROFILE_DIR}" "${GREEN}"
             {
                 echo "export DOCKER_HOST=\"unix:///var/run/docker.sock\""
                 echo "export DOCKER_TLS_VERIFY=\"1\""
@@ -122,7 +131,7 @@ install_pyenv() {
             echo "Installing pyenv"
             curl https://pyenv.run | bash
 
-            echo "Creating pyenv entry in ${USER_PROFILE_DIR}"
+            print_message "Creating pyenv entry in ${USER_PROFILE_DIR}" "${GREEN}"
             {
                 echo "export PYENV_ROOT=\"\$HOME/.pyenv\""
                 echo "export PATH=\$(echo \$PATH | sed -E \"s@([^:]*\.pyenv/[^:]*(:|$))@@g\")"
@@ -136,14 +145,14 @@ install_pyenv() {
 # Function to install Python using pyenv
 install_python_with_pyenv() {
     if [ ! -f "${HOME}/.pyenv/bin/pyenv" ]; then
-        echo "pyenv not found, skipping installation"
+        print_message "pyenv not found, skipping installation" "${RED}"
     else
         . "${USER_PROFILE_DIR}/pyenv"
 
         if [[ "$(pyenv versions)" == *"${PYENV_PYTHON_VERSION}"* ]]; then
-            echo "python ${PYENV_PYTHON_VERSION} is already installed... Done"
+            print_message "python ${PYENV_PYTHON_VERSION} is already installed... Done" "${BLUE}"
         else
-            echo "Installing python ${PYENV_PYTHON_VERSION}"
+            print_message "Installing python ${PYENV_PYTHON_VERSION}" "${GREEN}"
             pyenv install "${PYENV_PYTHON_VERSION}"
         fi
     fi
@@ -153,19 +162,19 @@ install_python_with_pyenv() {
 install_nvm() {
     if [[ "${NVM_ENABLED}" == "yes" ]]; then
         if [ -f "${HOME}/.nvm/nvm.sh" ]; then
-            echo "nvm is already installed... Done"
+            print_message "nvm is already installed... Done" "${BLUE}"
         else
             if [ ! -d "${HOME}/.nvm" ]; then
                 git clone https://github.com/nvm-sh/nvm.git "${HOME}/.nvm"
             fi
 
-            echo "Getting latest nvm version"
+            print_message "Getting latest nvm version" "${GREEN}"
             NVM_VERSION=$(git -C "${HOME}/.nvm" tag --list --sort=version:refname | tail -1)
 
-            echo "Setting nvm version to ${NVM_VERSION}"
+            print_message "Setting nvm version to ${NVM_VERSION}" "${GREEN}"
             git checkout --quiet "${NVM_VERSION}"
 
-            echo "Creating nvm entry in ${USER_PROFILE_DIR}"
+            print_message "Creating nvm entry in ${USER_PROFILE_DIR}" "${GREEN}"
             {
                 echo "export NVM_DIR=\"\$HOME/.nvm\""
                 echo "[ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" # This loads nvm"
@@ -178,7 +187,7 @@ install_nvm() {
 # Function to install npm using nvm
 install_npm_with_nvm() {
     if [ ! -f "${HOME}/.nvm/nvm.sh" ]; then
-        echo "nvm not found, skipping installation"
+        print_message "nvm not found, skipping installation" "${RED}"
     else
         . "${USER_PROFILE_DIR}/nvm"
 
@@ -187,9 +196,9 @@ install_npm_with_nvm() {
         fi
 
         if [[ "$(nvm ls "${NVM_NODE_VERSION}")" == *"${NVM_NODE_VERSION}"* ]]; then
-            echo "npm ${NVM_NODE_VERSION} is already installed... Done"
+            print_message "npm ${NVM_NODE_VERSION} is already installed... Done" "${BLUE}"
         else
-            echo "Installing npm ${NVM_NODE_VERSION}"
+            print_message "Installing npm ${NVM_NODE_VERSION}" "${GREEN}"
             nvm install "${NVM_NODE_VERSION}"
         fi
     fi
@@ -200,22 +209,22 @@ install_zsh() {
     if [[ "${ZSH_ENABLED}" == "yes" ]]; then
 
         if [[ "${SHELL}" == *"zsh"* || -d "${HOME}/.oh-my-zsh" ]]; then
-            echo "zsh is already installed... Done"
+            print_message "zsh is already installed... Done" "${BLUE}"
         else
-            echo "Installing ZSH..."
+            print_message "Installing apt ZSH..." "${GREEN}"
             sudo apt install -y zsh
             chsh -s "$(which zsh)"
 
-            echo "Installing zsh..."
+            print_message "Installing zsh..." "${GREEN}"
             sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
         fi
 
         USER_PROFILE="${HOME}/.zshrc"
 
         if [[ "$(cat "${USER_PROFILE}")" == *"ZSH_THEME=\"${ZSH_THEME}\""* ]]; then
-            echo "zsh theme ${ZSH_THEME} is already installed... Done"
+            print_message "zsh theme ${ZSH_THEME} is already installed... Done" "${BLUE}"
         else
-            echo "Installing ${ZSH_THEME} as zsh theme"
+            print_message "Installing ${ZSH_THEME} as zsh theme" "${GREEN}"
             sed -i "s/^ZSH_THEME=.\+$/ZSH_THEME=\"${ZSH_THEME}\"/g" "${USER_PROFILE}"
         fi
     fi
@@ -250,4 +259,4 @@ main() {
 
 # Run the main function
 main
-echo -e "\nAll done, ensure to re-open your terminal to get all changes."
+print_message "\nAll done, ensure to re-open your terminal to get all changes." "${GREEN}"
