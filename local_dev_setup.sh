@@ -11,6 +11,17 @@ PYENV_PYTHON_VERSION=${PYENV_PYTHON_VERSION:-'3:latest'}
 NVM_ENABLED=${NVM_ENABLED:-'yes'}
 NVM_NODE_VERSION=${NVM_NODE_VERSION:-'latest'}
 
+# Terminal colors
+NC="\033[0m" # No Color
+BLACK="\033[0;30m"
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+BROWN="\033[0;33m"
+BLUE="\033[0;34m"
+PURPLE="\033[0;35m"
+CYAN="\033[0;36m"
+GRAY="\033[0;37m"
+
 # Function to print colorized messages
 print_message() {
     local message=$1

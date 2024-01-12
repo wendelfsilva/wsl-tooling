@@ -1,6 +1,7 @@
 # wsl-tooling
 
 ## Installation
+
 To set up the WSL (Windows Subsystem for Linux) development environment, you can use the following one-liner:
 
 ```shell
