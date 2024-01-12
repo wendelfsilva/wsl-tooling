@@ -54,7 +54,12 @@ install_system_dependencies() {
     sudo apt upgrade -y
     sudo apt install -y -f \
         git \
-        build-essential
+        build-essential \
+        python3-dev \
+        zlib1g-dev \
+        libssl-dev \
+        libbz2-dev \
+        libffi-dev
 }
 
 # Function to install Docker and Docker Compose
