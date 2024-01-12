@@ -253,8 +253,8 @@ install_zsh() {
         fi
 
         if [[ ! "${SHELL}" == *"zsh"* ]]; then
-            print_message "Setting zsh as default shell"
-            sudo chsh -s "$(which zsh)" "${USER}"
+            print_message "Changing user shell to zsh"
+            sudo chsh "${USER}" -s "$(which zsh)"
         fi
 
         USER_PROFILE="${HOME}/.zshrc"
