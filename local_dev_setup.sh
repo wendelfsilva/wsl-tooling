@@ -56,10 +56,16 @@ install_system_dependencies() {
         git \
         build-essential \
         python3-dev \
+        python3-tk \
+        tk-dev \
         zlib1g-dev \
         libssl-dev \
         libbz2-dev \
-        libffi-dev
+        libffi-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libncurses-dev \
+        liblzma-dev
 }
 
 # Function to install Docker and Docker Compose
@@ -193,7 +199,7 @@ install_npm_with_nvm() {
 install_zsh() {
     if [[ "${ZSH_ENABLED}" == "yes" ]]; then
 
-        if [[ "${SHELL}" == *"zsh"* ]]; then
+        if [[ "${SHELL}" == *"zsh"* || -d "${HOME}/.oh-my-zsh" ]]; then
             echo "zsh is already installed... Done"
         else
             echo "Installing ZSH..."
