@@ -19,6 +19,7 @@ PYENV_PYTHON_VERSION=3.11 NVM_NODE_VERSION=18.12 bash
 
 - *ZSH_THEME*: The theme for the Zsh shell (default: robbyrussell).
 - *DOCKER_ENABLED*: Enable Docker integration (default: no).
+- *DIRENV_ENABLED*: Enable Pyenv for Python version management (default: yes).
 - *PYENV_ENABLED*: Enable Pyenv for Python version management (default: yes).
 - *PYENV_PYTHON_VERSION*: Specify the Python version for Pyenv (default: latest).
 - *NVM_ENABLED*: Enable NVM (Node Version Manager) for Node.js version management (default: yes).
