@@ -1,0 +1,4 @@
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH=$(echo $PATH | sed -E "s@([^:]*\.pyenv/[^:]*(:|$))@@g")
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
