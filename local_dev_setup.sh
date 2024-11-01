@@ -51,6 +51,39 @@ check_sudo() {
 	fi
 }
 
+# Function to install zsh
+install_zsh() {
+	if [[ "${ZSH_ENABLED}" == "yes" ]]; then
+
+		if [[ -d "${HOME}/.oh-my-zsh" ]]; then
+			print_message "zsh is already installed... Done" "${SUCCESS}"
+		else
+			print_message "Installing ZSH"
+			sudo apt install -y zsh
+			sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+		fi
+
+		if [[ ! "${SHELL}" == *"zsh"* ]]; then
+			print_message "Changing user shell to zsh"
+			sudo chsh "${USER}" -s "$(which zsh)"
+   			export SHELL=$(which zsh)
+		fi
+
+		USER_PROFILE="${HOME}/.zshrc"
+		if [[ "$(cat "${USER_PROFILE}")" == *"ZSH_THEME=\"${ZSH_THEME}\""* ]]; then
+			print_message "zsh theme ${ZSH_THEME} is already installed... Done" "${SUCCESS}"
+		else
+			print_message "Installing ${ZSH_THEME} as zsh theme"
+			sed -i "s/^ZSH_THEME=.\+$/ZSH_THEME=\"${ZSH_THEME}\"/g" "${USER_PROFILE}"
+		fi
+
+  		print_message "Sourcing Zsh configuration to apply changes"
+		source "${USER_PROFILE}"
+
+		print_message "zsh installed... Done" "${SUCCESS}"
+	fi
+}
+
 # Function to create wsl.conf
 create_wsl_conf() {
 	if [ ! -f "/etc/wsl.conf" ]; then
@@ -288,36 +321,6 @@ install_npm_with_nvm() {
 	fi
 }
 
-# Function to install zsh
-install_zsh() {
-	if [[ "${ZSH_ENABLED}" == "yes" ]]; then
-
-		if [[ -d "${HOME}/.oh-my-zsh" ]]; then
-			print_message "zsh is already installed... Done" "${SUCCESS}"
-		else
-			print_message "Installing ZSH"
-			sudo apt install -y zsh
-			sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-		fi
-
-		if [[ ! "${SHELL}" == *"zsh"* ]]; then
-			print_message "Changing user shell to zsh"
-			sudo chsh "${USER}" -s "$(which zsh)"
-		fi
-
-		USER_PROFILE="${HOME}/.zshrc"
-
-		if [[ "$(cat "${USER_PROFILE}")" == *"ZSH_THEME=\"${ZSH_THEME}\""* ]]; then
-			print_message "zsh theme ${ZSH_THEME} is already installed... Done" "${SUCCESS}"
-		else
-			print_message "Installing ${ZSH_THEME} as zsh theme"
-			sed -i "s/^ZSH_THEME=.\+$/ZSH_THEME=\"${ZSH_THEME}\"/g" "${USER_PROFILE}"
-		fi
-
-		print_message "zsh installed... Done" "${SUCCESS}"
-	fi
-}
-
 # Include all files in ${USER_PROFILE_DIR}
 update_user_profile() {
 	USER_PROFILE_INCLUDE="for f in ${USER_PROFILE_DIR}/*; do source \$f; done"
@@ -339,6 +342,13 @@ update_user_profile() {
 # Main function
 main() {
 	check_sudo
+	install_zsh
+
+	if [[ "${SHELL}" != *"zsh"* ]]; then
+		print_message "Restarting script in Zsh..." "${WARNING}"
+		exec zsh -c "$0"
+	fi
+ 
 	create_wsl_conf
 	create_user_profile_folder
 	install_system_dependencies
@@ -348,7 +358,6 @@ main() {
 	install_python_with_pyenv
 	install_nvm
 	install_npm_with_nvm
-	install_zsh
 	update_user_profile
 }
 
