@@ -66,7 +66,6 @@ install_zsh() {
 		if [[ ! "${SHELL}" == *"zsh"* ]]; then
 			print_message "Changing user shell to zsh"
 			sudo chsh "${USER}" -s "$(which zsh)"
-   			export SHELL=$(which zsh)
 		fi
 
 		USER_PROFILE="${HOME}/.zshrc"
@@ -76,9 +75,6 @@ install_zsh() {
 			print_message "Installing ${ZSH_THEME} as zsh theme"
 			sed -i "s/^ZSH_THEME=.\+$/ZSH_THEME=\"${ZSH_THEME}\"/g" "${USER_PROFILE}"
 		fi
-
-  		print_message "Sourcing Zsh configuration to apply changes"
-		source "${USER_PROFILE}"
 
 		print_message "zsh installed... Done" "${SUCCESS}"
 	fi
