@@ -5,14 +5,14 @@
 To set up the WSL (Windows Subsystem for Linux) development environment, you can use the following one-liner:
 
 ```shell
-curl -sSL https://raw.githubusercontent.com/wendelfsilva/wsl-tooling/main/local_dev_setup.sh | bash
+curl -sSL https://raw.githubusercontent.com/wendelfsilva/wsl-tooling/main/local_dev_setup.sh | sh
 ```
 
 To customize the installation with specific env values, follow this example:
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/wendelfsilva/wsl-tooling/main/local_dev_setup.sh | \
-PYENV_PYTHON_VERSION=3.11 NVM_NODE_VERSION=18.12 bash
+PYENV_PYTHON_VERSION=3.11 NVM_NODE_VERSION=18.12 sh
 ```
 
 ## Available Envs

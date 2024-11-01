@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # shellcheck source=/dev/null
 # shellcheck disable=SC2034
 # Author: Wendel Silva
@@ -8,7 +8,7 @@ set -e
 
 ZSH_THEME=${ZSH_THEME:-'robbyrussell'}
 DOCKER_ENABLED=${DOCKER_ENABLED:-'no'}
-DIRENV_ENABLED=${DOCKER_ENABLED:-'yes'}
+DIRENV_ENABLED=${DIRENV_ENABLED:-'yes'}
 PYENV_ENABLED=${PYENV_ENABLED:-'yes'}
 PYENV_PYTHON_VERSION=${PYENV_PYTHON_VERSION:-'3:latest'}
 NVM_ENABLED=${NVM_ENABLED:-'yes'}
@@ -32,9 +32,9 @@ ERROR=${RED}
 
 # Function to print colorized messages
 print_message() {
-    local message=$1
-    local color=$2
-    echo -e "${color:-${DEFAULT}}${message}${NC}"
+    message=$1
+    color=$2
+    printf "%b%s%b\n" "${color:-${DEFAULT}}" "${message}" "${NC}"
 }
 
 # Function to validate if zsh is installed
@@ -42,9 +42,8 @@ check_zsh() {
     if ! [ -x "$(command -v zsh)" ]; then
         print_message "zsh is not installed, please install it before running this script" "${ERROR}"
         print_message "You can install zsh by running:"
-        print_message "     sudo apt install -y zsh" "${INFO}"
-        print_message "     sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" --unattended" "${INFO}"
-        print_message "     sudo chsh \"${USER}\" -s \"$(which zsh)\"" "${INFO}"
+        print_message "     sudo apt install -y zsh" "${WARNING}"
+        print_message "     sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" --unattended" "${WARNING}"
 
         exit 0
     fi
@@ -52,7 +51,7 @@ check_zsh() {
 
 # Function to check if the script is running as sudo
 check_sudo() {
-    if (($(id -u) == 0)); then
+    if [ "$(id -u)" = "0" ]; then
         print_message "Please run the script without sudo and wait for the sudo password to be requested" "${ERROR}"
         exit 0
     fi
@@ -63,34 +62,42 @@ check_sudo() {
     fi
 }
 
-# Include all files in ${USER_PROFILE_DIR}
+# Function to set user profile preferences
 update_user_profile() {
-    USER_PROFILE="${HOME}/.zshrc"
-    if [[ "$(cat "${USER_PROFILE}")" == *"ZSH_THEME=\"${ZSH_THEME}\""* ]]; then
-        print_message "zsh theme ${ZSH_THEME} is already installed... Done" "${SUCCESS}"
-    else
-        print_message "Installing ${ZSH_THEME} as zsh theme"
-        sed -i "s/^ZSH_THEME=.\+$/ZSH_THEME=\"${ZSH_THEME}\"/g" "${USER_PROFILE}"
+    USER_PROFILE="${HOME}/.bashrc"
+    if echo "${SHELL}" | grep -q "zsh"; then
+        USER_PROFILE="${HOME}/.zshrc"
+
+        if grep -q "ZSH_THEME=\"${ZSH_THEME}\"" "${USER_PROFILE}"; then
+            print_message "zsh theme ${ZSH_THEME} is already set... Done" "${SUCCESS}"
+        else
+            print_message "Setting zsh theme to ${ZSH_THEME}"
+            sed -i "s/^ZSH_THEME=.*$/ZSH_THEME=\"${ZSH_THEME}\"/" "${USER_PROFILE}"
+        fi
     fi
 
-    USER_PROFILE_INCLUDE="for f in ${USER_PROFILE_DIR}/*; do source \$f; done"
-    if [[ "$(cat "${USER_PROFILE}")" == *"${USER_PROFILE_INCLUDE}"* ]]; then
-        print_message "${USER_PROFILE_DIR} is already set... Done" "${SUCCESS}"
-    else
-        print_message "Setting ${USER_PROFILE_DIR} to ${USER_PROFILE}"
+    USER_PROFILE_DIR="${HOME}/.profile.d"
+    if [ ! -d "${USER_PROFILE_DIR}" ]; then
+        print_message "Creating ${USER_PROFILE_DIR}"
+        mkdir -m 0755 "${USER_PROFILE_DIR}"
+    fi
 
+    USER_PROFILE_INCLUDE="for f in ${USER_PROFILE_DIR}/*; do . \"\$f\"; done"
+    if grep -qF "${USER_PROFILE_INCLUDE}" "${USER_PROFILE}"; then
+        print_message "${USER_PROFILE_DIR} is already included in ${USER_PROFILE}... Done" "${SUCCESS}"
+    else
+        print_message "Adding ${USER_PROFILE_DIR} inclusion to ${USER_PROFILE}"
         {
             echo
             echo "# Include all files in ${USER_PROFILE_DIR}"
             echo "$USER_PROFILE_INCLUDE"
         } >>"${USER_PROFILE}"
-
-        print_message "${USER_PROFILE_DIR} set... Done" "${SUCCESS}"
+        print_message "${USER_PROFILE_DIR} inclusion added to ${USER_PROFILE}... Done" "${SUCCESS}"
     fi
 }
 
-# Function to create wsl.conf
-create_wsl_conf() {
+# Function to update wsl.conf
+update_wsl_conf() {
     if [ ! -f "/etc/wsl.conf" ]; then
         print_message "Creating /etc/wsl.conf"
         {
@@ -100,47 +107,33 @@ create_wsl_conf() {
     fi
 }
 
-# Function to set user profile preferences
-create_user_profile_folder() {
-    USER_PROFILE="${HOME}/.bashrc"
-    if [[ "${SHELL}" == *"zsh"* ]]; then
-        USER_PROFILE="${HOME}/.zshrc"
-    fi
-
-    USER_PROFILE_DIR="${HOME}/.profile.d"
-    if [ ! -d "${USER_PROFILE_DIR}" ]; then
-        print_message "Creating ${USER_PROFILE_DIR}"
-        mkdir -m 0755 "${USER_PROFILE_DIR}"
-    fi
-}
-
 # Function to install system dependencies
 install_system_dependencies() {
     print_message "Installing system dependencies"
     sudo apt update -y
     sudo apt upgrade -y
     sudo apt install -y -f \
-        git \
-        build-essential \
-        python3-dev \
-        python3-tk \
-        python3-twisted \
-        python3-distutils \
-        python3-setuptools \
-        tk-dev \
-        zlib1g-dev \
-        libssl-dev \
-        libbz2-dev \
-        libffi-dev \
-        libreadline-dev \
-        libsqlite3-dev \
-        libncurses-dev \
-        liblzma-dev
+    git \
+    build-essential \
+    python3-dev \
+    python3-tk \
+    python3-twisted \
+    python3-distutils \
+    python3-setuptools \
+    tk-dev \
+    zlib1g-dev \
+    libssl-dev \
+    libbz2-dev \
+    libffi-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libncurses-dev \
+    liblzma-dev
 }
 
 # Function to install Docker and Docker Compose
 install_docker() {
-    if [[ "${DOCKER_ENABLED}" == "yes" ]]; then
+    if [ "${DOCKER_ENABLED}" = "yes" ]; then
         if [ -x "$(command -v docker)" ]; then
             print_message "docker is already installed... Done" "${SUCCESS}"
         else
@@ -149,25 +142,25 @@ install_docker() {
             # Add Docker's official GPG key:
             sudo apt-get update -y
             sudo apt-get install -y -f \
-                ca-certificates \
-                curl \
-                gnupg
+            ca-certificates \
+            curl \
+            gnupg
             sudo install -m 0755 -d /etc/apt/keyrings
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
             sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
             # Add the repository to Apt sources:
             echo \
-                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-        $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" |
-                sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" |
+            sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
             sudo apt-get update -y
             sudo apt-get install -y -f \
-                docker-ce \
-                docker-ce-cli \
-                containerd.io \
-                docker-buildx-plugin \
-                docker-compose-plugin
+            docker-ce \
+            docker-ce-cli \
+            containerd.io \
+            docker-buildx-plugin \
+            docker-compose-plugin
 
             # https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
             # Create docker group and associate to the logged user
@@ -191,44 +184,54 @@ install_docker() {
 
 # Function to install direnv
 install_direnv() {
-    if [[ "${DIRENV_ENABLED}" == "yes" ]]; then
+    if [ "${DIRENV_ENABLED}" = "yes" ]; then
+        # Check if direnv is already installed
         if [ -x "$(command -v direnv)" ]; then
             print_message "direnv is already installed... Done" "${SUCCESS}"
         else
             print_message "Installing direnv"
+            sudo apt-get install -y -f direnv
+            print_message "direnv installed... Done" "${SUCCESS}"
+        fi
 
-            sudo apt-get install -y -f \
-                direnv
-
-            # Direnv entry in user profile
+        # Check if the direnv entry already exists in the profile directory
+        if [ -f "${USER_PROFILE_DIR}/direnv" ]; then
+            print_message "direnv entry already exists in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
+        else
+            # Create the direnv entry in the user profile directory
             print_message "Creating direnv entry in ${USER_PROFILE_DIR}"
             {
                 echo "eval \"\$(direnv hook zsh)\""
             } >"${USER_PROFILE_DIR}/direnv"
-
-            print_message "direnv installed... Done" "${SUCCESS}"
+            print_message "direnv entry created in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
         fi
     fi
 }
 
+
 # Function to install pyenv
 install_pyenv() {
-    if [[ "${PYENV_ENABLED}" == "yes" ]]; then
+    if [ "${PYENV_ENABLED}" = "yes" ]; then
         if [ -f "${HOME}/.pyenv/bin/pyenv" ]; then
             print_message "pyenv is already installed... Done" "${SUCCESS}"
         else
             print_message "Installing pyenv" "${BLUE}"
             curl https://pyenv.run | bash
+            print_message "pyenv installed... Done" "${SUCCESS}"
+        fi
 
+        # Check if pyenv entry already exists in the profile directory
+        if [ -f "${USER_PROFILE_DIR}/pyenv" ]; then
+            print_message "pyenv entry already exists in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
+        else
             print_message "Creating pyenv entry in ${USER_PROFILE_DIR}"
             {
                 echo "export PYENV_ROOT=\"\$HOME/.pyenv\""
-                echo "export PATH=\$(echo \$PATH | sed -E \"s@([^:]*\.pyenv/[^:]*(:|$))@@g\")"
-                echo "[[ -d \$PYENV_ROOT/bin ]] && export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
+                echo "export PATH=\"\$(echo \"\$PATH\" | sed -E 's@([^:]*\.pyenv/[^:]*(:|$))@@g')\""
+                echo "[ -d \"\$PYENV_ROOT/bin\" ] && export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
                 echo "eval \"\$(pyenv init -)\""
             } >"${USER_PROFILE_DIR}/pyenv"
-
-            print_message "pyenv installed... Done" "${SUCCESS}"
+            print_message "pyenv entry created in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
         fi
     fi
 }
@@ -238,22 +241,26 @@ install_python_with_pyenv() {
     if [ ! -f "${HOME}/.pyenv/bin/pyenv" ]; then
         print_message "pyenv not found, skipping installation" "${WARNING}"
     else
-        . "${USER_PROFILE_DIR}/pyenv"
+        # Source the pyenv setup script if available
+        if [ -f "${USER_PROFILE_DIR}/pyenv" ]; then
+            . "${USER_PROFILE_DIR}/pyenv"
+        fi
 
-        if [[ "$(pyenv versions)" == *"${PYENV_PYTHON_VERSION}"* ]]; then
-            print_message "python ${PYENV_PYTHON_VERSION} is already installed... Done" "${SUCCESS}"
+        # Check if the specified Python version is already installed
+        if pyenv versions | grep -q "${PYENV_PYTHON_VERSION}"; then
+            print_message "Python ${PYENV_PYTHON_VERSION} is already installed... Done" "${SUCCESS}"
         else
-            print_message "Installing python ${PYENV_PYTHON_VERSION}"
-            pyenv install "${PYENV_PYTHON_VERSION}"
-
-            print_message "python ${PYENV_PYTHON_VERSION} installed... Done" "${SUCCESS}"
+            print_message "Installing Python ${PYENV_PYTHON_VERSION}"
+            pyenv install --skip-existing "${PYENV_PYTHON_VERSION}"
+            print_message "Python ${PYENV_PYTHON_VERSION} installed... Done" "${SUCCESS}"
         fi
     fi
 }
 
+
 # Function to install nvm
 install_nvm() {
-    if [[ "${NVM_ENABLED}" != "no" ]]; then
+    if [ "${NVM_ENABLED}" != "no" ]; then
         if [ -f "${HOME}/.nvm/nvm.sh" ]; then
             print_message "nvm is already installed... Done" "${SUCCESS}"
         else
@@ -309,13 +316,14 @@ install_npm_with_nvm() {
     if [ ! -f "${HOME}/.nvm/nvm.sh" ]; then
         print_message "nvm not found, skipping installation" "${WARNING}"
     else
-        . "${USER_PROFILE_DIR}/nvm"
+        . "${HOME}/.nvm/nvm.sh"
 
-        if [[ "${NVM_NODE_VERSION}" == "latest" ]]; then
+        if [ "${NVM_NODE_VERSION}" = "latest" ]; then
             NVM_NODE_VERSION=$(nvm version-remote --lts | tr -d v)
         fi
 
-        if [[ "$(nvm ls "${NVM_NODE_VERSION}")" == *"${NVM_NODE_VERSION}"* ]]; then
+        # Check if the specified Node.js version is already installed
+        if nvm ls | grep -q "${NVM_NODE_VERSION}"; then
             print_message "npm ${NVM_NODE_VERSION} is already installed... Done" "${SUCCESS}"
         else
             print_message "Installing npm ${NVM_NODE_VERSION}"
@@ -331,8 +339,7 @@ main() {
     check_zsh
     check_sudo
     update_user_profile
-    create_wsl_conf
-    create_user_profile_folder
+    update_wsl_conf
     install_system_dependencies
     install_docker
     install_direnv
@@ -344,4 +351,4 @@ main() {
 
 # Run the main function
 main
-print_message "\nAll done, ensure to re-open your terminal to get all changes." "${WARNING}"
+print_message "All done, ensure to re-open your terminal to get all changes." "${WARNING}"
