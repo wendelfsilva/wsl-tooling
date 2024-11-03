@@ -316,8 +316,11 @@ install_npm_with_nvm() {
     if [ ! -f "${HOME}/.nvm/nvm.sh" ]; then
         print_message "nvm not found, skipping installation" "${WARNING}"
     else
-        . "${HOME}/.nvm/nvm.sh"
+        # This loads nvm
+        NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
+        # Check the lastes version of npm
         if [ "${NVM_NODE_VERSION}" = "latest" ]; then
             NVM_NODE_VERSION=$(nvm version-remote --lts | tr -d v)
         fi
