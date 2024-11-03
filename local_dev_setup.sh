@@ -170,12 +170,12 @@ install_docker() {
             sudo usermod -aG docker "${USER}"
 
             # Docker entry in user profile
-            print_message "Creating docker entry in ${USER_PROFILE_DIR}"
             {
                 echo "export DOCKER_HOST=\"unix:///var/run/docker.sock\""
                 echo "export DOCKER_TLS_VERIFY=\"1\""
                 echo "export DOCKER_CERT_PATH=\"\$HOME/.docker/certs\""
             } >"${USER_PROFILE_DIR}/docker"
+            print_message "docker entry created in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
 
             print_message "docker installed... Done" "${SUCCESS}"
         fi
@@ -326,14 +326,16 @@ install_npm_with_nvm() {
         fi
 
         # Check if the specified Node.js version is already installed
-        if nvm ls | grep -q "${NVM_NODE_VERSION}"; then
-            print_message "npm ${NVM_NODE_VERSION} is already installed... Done" "${SUCCESS}"
-        else
+        if nvm ls "${NVM_NODE_VERSION}" | grep -q "N/A"; then
             print_message "Installing npm ${NVM_NODE_VERSION}"
             nvm install "${NVM_NODE_VERSION}"
 
             print_message "npm ${NVM_NODE_VERSION} installed... Done" "${SUCCESS}"
+        else
+            print_message "npm ${NVM_NODE_VERSION} is already installed... Done" "${SUCCESS}"
         fi
+
+        nvm use "${NVM_NODE_VERSION}"
     fi
 }
 

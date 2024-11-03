@@ -12,7 +12,7 @@ To customize the installation with specific env values, follow this example:
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/wendelfsilva/wsl-tooling/main/local_dev_setup.sh | \
-PYENV_PYTHON_VERSION=3.11 NVM_NODE_VERSION=18.12 sh
+PYENV_PYTHON_VERSION=3.11 DOCKER_ENABLED=no sh
 ```
 
 ## Available Envs
