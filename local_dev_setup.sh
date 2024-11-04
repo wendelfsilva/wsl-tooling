@@ -134,51 +134,61 @@ install_system_dependencies() {
 # Function to install Docker and Docker Compose
 install_docker() {
     if [ "${DOCKER_ENABLED}" = "yes" ]; then
+        # Remove docker windows from PATH
+        PATH="$(echo "$PATH" | sed -E 's@(/mnt/c/[^:]*/Docker/[^:]*(:|$))@@g')"
+
         if [ -x "$(command -v docker)" ]; then
             print_message "docker is already installed... Done" "${SUCCESS}"
         else
             print_message "Installing docker"
 
             # Add Docker's official GPG key:
-            sudo apt-get update -y
-            sudo apt-get install -y -f \
+            sudo apt update -y
+            sudo apt install -y -f \
             ca-certificates \
             curl \
             gnupg
-            sudo install -m 0755 -d /etc/apt/keyrings
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-            sudo chmod a+r /etc/apt/keyrings/docker.gpg
+            sudo install -m 0755 -d /etc/apt/keyrings >/dev/null 2>&1
+            sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+            sudo chmod a+r /etc/apt/keyrings/docker.asc
 
             # Add the repository to Apt sources:
             echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
             $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" |
             sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-            sudo apt-get update -y
-            sudo apt-get install -y -f \
+            sudo apt update -y
+            sudo apt install -y -f \
             docker-ce \
             docker-ce-cli \
             containerd.io \
             docker-buildx-plugin \
             docker-compose-plugin
-
-            # https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
-            # Create docker group and associate to the logged user
-
-            print_message "Adding ${USER} to docker group"
-            sudo groupadd docker
-            sudo usermod -aG docker "${USER}"
-
-            # Docker entry in user profile
-            {
-                echo "export DOCKER_HOST=\"unix:///var/run/docker.sock\""
-                echo "export DOCKER_TLS_VERIFY=\"1\""
-                echo "export DOCKER_CERT_PATH=\"\$HOME/.docker/certs\""
-            } >"${USER_PROFILE_DIR}/docker"
-            print_message "docker entry created in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
-
-            print_message "docker installed... Done" "${SUCCESS}"
         fi
+
+        # https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
+        # Create docker group and associate to the logged user
+        if id -nG "${USER}" | grep -qw "docker"; then
+            print_message "${USER} is already a member of the docker group... Skipping" "${SUCCESS}"
+        else
+            sudo groupadd -f docker
+            sudo usermod -aG docker "${USER}"
+            print_message "${USER} added to the docker group... Done" "${SUCCESS}"
+        fi
+
+        # # Check if pyenv entry already exists in the profile directory
+        # if [ -f "${USER_PROFILE_DIR}/docker" ]; then
+        #     print_message "docker entry already exists in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
+        # else
+        #     # Docker entry in user profile
+        #     {
+        #         echo "export DOCKER_HOST=\"unix:///var/run/docker.sock\""
+        #         echo "export DOCKER_TLS_VERIFY=\"1\""
+        #         echo "export DOCKER_CERT_PATH=\"\$HOME/.docker/certs\""
+        #     } >"${USER_PROFILE_DIR}/docker"
+        #     print_message "docker entry created in ${USER_PROFILE_DIR}... Done" "${SUCCESS}"
+
+        # fi
     fi
 }
 
