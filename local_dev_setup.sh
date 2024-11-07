@@ -118,7 +118,6 @@ install_system_dependencies() {
     python3-dev \
     python3-tk \
     python3-twisted \
-    python3-distutils \
     python3-setuptools \
     tk-dev \
     zlib1g-dev \
